@@ -1,0 +1,1 @@
+void copy_file(char *filename, char *dirname);
