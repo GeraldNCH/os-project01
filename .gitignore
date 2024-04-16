@@ -1,2 +1,2 @@
-src/*.out
 test/copy/*
+bin/*
