@@ -1,15 +1,11 @@
-struct files_list
+struct node
 {
     char *filename;
-    struct files_list *next;
+    struct node *next;
 };
 
-typedef struct files_list *node;
+struct node *push_node(struct node *head, char *filename);
 
-node create_node(char *filename);
+void delete_list(struct node *head);
 
-node add_node(node head, node new_node);
-
-node delete_list(node head);
-
-void print_list(node head);
+void print_list(struct node *head);

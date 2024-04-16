@@ -2,6 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <unistd.h>
+#include "utils.h"
 
 void copy_file(char *filename, char *new_filename)
 {
@@ -83,4 +89,54 @@ char *get_new_filename(char *src_filename, char *dest_dir)
     temp_src_filename_01 = NULL, temp_src_filename_02 = NULL;
 
     return new_filename;
+}
+
+struct node *read_directory(char *directory_name, char *parent_directory, struct node *head)
+{
+    DIR *dirp = opendir(directory_name);
+    if (dirp == NULL)
+    {
+        printf("Cannot open the directory\n");
+        return NULL;
+    }
+
+    int result = chdir(directory_name);
+    if (result != 0)
+    {
+        perror("Error");
+        return NULL;
+    }
+
+    struct dirent *entry;
+    struct stat sb;
+
+    while ((entry = readdir(dirp)) != NULL)
+    {
+        if (stat(entry->d_name, &sb) == -1)
+        {
+            perror("Error");
+            continue;
+        }
+
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+        {
+            continue;
+        }
+
+        if (S_ISDIR(sb.st_mode) != 0) // Is a directory
+        {
+            char path[PATH_MAX_LENGTH];
+            snprintf(path, sizeof(path), "%s/%s", directory_name, entry->d_name);
+            // printf("%s\n", path);
+            head = read_directory(entry->d_name, path, head);
+            chdir("..");
+        }
+        else // Is a file
+        {
+            char filename[PATH_MAX_LENGTH];
+            snprintf(filename, sizeof(filename), "%s/%s", parent_directory, entry->d_name);
+            head = push_node(head, filename);
+        }
+    }
+    closedir(dirp);
 }

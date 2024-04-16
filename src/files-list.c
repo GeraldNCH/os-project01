@@ -2,58 +2,37 @@
 #include <stdlib.h>
 #include "files-list.h"
 
-node create_node(char *filename)
+struct node *push_node(struct node *head, char *filename)
 {
-    node temp;
-    temp = (node)malloc(sizeof(struct files_list));
-    temp->filename = filename;
-    temp->next = NULL;
-    return temp;
+    printf("Inserting filepath: %s\n", filename);
+    struct node *new = (struct node *)malloc(sizeof(struct node));
+    new->filename = filename;
+    new->next = head;
+    return new;
 }
 
-node add_node(node head, node new_node)
-{
-    node temp = head;
-    if (head == NULL)
-    {
-        head = new_node;
-    }
-    else
-    {
-        while (temp->next != NULL)
-        {
-            temp = temp->next;
-        }
-        temp->next = new_node;
-    }
-    return head;
-}
-
-node delete_list(node head)
+void delete_list(struct node *head)
 {
     if (head == NULL)
     {
-        return head;
+        return;
     }
-    node temp = head;
+    struct node *temp = head;
     while (head->next != NULL)
     {
         head = head->next;
         free(temp);
         temp = head;
     }
-    free(head);
+    free(temp);
     head = NULL, temp = NULL;
-    return head;
 }
 
-void print_list(node head)
+void print_list(struct node *head)
 {
-    node temp = head;
-    while (temp->next != NULL)
+    while (head != NULL)
     {
-        printf("Filename: %s\n", temp->filename);
-        temp = temp->next;
+        printf("Filepath: %s\n", head->filename);
+        head = head->next;
     }
-    printf("Filename: %s\n", temp->filename);
 }
