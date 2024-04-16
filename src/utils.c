@@ -9,20 +9,31 @@
 #include <unistd.h>
 #include "utils.h"
 
+void create_dir(char *relative_path)
+{
+    struct stat sb;
+    if (stat(relative_path, &sb) == -1)
+    {
+        mkdir(relative_path, S_IRWXU);
+    }
+}
+
 void copy_file(char *filename, char *new_filename)
 {
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
-        printf("Error opening the file %s to read the file content\n", filename);
+        perror("Reading file");
+        // printf("Error opening the file %s to read the file content\n", filename);
         exit(1);
     }
 
     FILE *new_file = fopen(new_filename, "w");
     if (new_file == NULL)
     {
-        printf("Error creating the file %s to write the file content\n", new_filename);
-        free(new_filename);
+        perror("Writing file");
+        // printf("Error creating the file %s to write the file content\n", new_filename);
+        // free(new_filename);
         exit(1);
     }
 
@@ -46,7 +57,7 @@ void copy_file(char *filename, char *new_filename)
 }
 
 // The return has to be freed
-char *get_new_filename(char *src_filename, char *dest_dir)
+char *change_root_name(char *src_filename, char *dest_dir)
 {
     // printf("Get new filename function\n");
 
@@ -66,6 +77,7 @@ char *get_new_filename(char *src_filename, char *dest_dir)
     if (dir[0] == dot || strchr(dir, slash) == NULL)
     {
         new_filename = malloc(sizeof(filename) + sizeof(dest_dir) + 2);
+        new_filename[0] = '\0';
         strcat(new_filename, dest_dir);
         strcat(new_filename, "/");
         strcat(new_filename, filename);
@@ -74,7 +86,8 @@ char *get_new_filename(char *src_filename, char *dest_dir)
     {
         char *ptr = strchr(dir, slash);
         ptr++;
-        new_filename = malloc(sizeof(filename) + sizeof(ptr) + 3);
+        new_filename = malloc(sizeof(filename) + sizeof(ptr) + sizeof(dest_dir) + 3);
+        new_filename[0] = '\0';
         strcat(new_filename, dest_dir);
         strcat(new_filename, "/");
         strcat(new_filename, ptr);
@@ -82,7 +95,7 @@ char *get_new_filename(char *src_filename, char *dest_dir)
         strcat(new_filename, filename);
     }
 
-    printf("New filename: %s\n", new_filename);
+    // printf("New filename: %s\n", new_filename);
 
     free(temp_src_filename_01);
     free(temp_src_filename_02);
@@ -91,20 +104,20 @@ char *get_new_filename(char *src_filename, char *dest_dir)
     return new_filename;
 }
 
-struct node *read_directory(char *directory_name, char *parent_directory, struct node *head)
+void read_directory(char *dir_name, char *parent_dir, char *dest_dir)
 {
-    DIR *dirp = opendir(directory_name);
+    DIR *dirp = opendir(dir_name);
     if (dirp == NULL)
     {
         printf("Cannot open the directory\n");
-        return NULL;
+        return;
     }
 
-    int result = chdir(directory_name);
+    int result = chdir(dir_name);
     if (result != 0)
     {
         perror("Error");
-        return NULL;
+        return;
     }
 
     struct dirent *entry;
@@ -126,16 +139,18 @@ struct node *read_directory(char *directory_name, char *parent_directory, struct
         if (S_ISDIR(sb.st_mode) != 0) // Is a directory
         {
             char path[PATH_MAX_LENGTH];
-            snprintf(path, sizeof(path), "%s/%s", directory_name, entry->d_name);
-            // printf("%s\n", path);
-            head = read_directory(entry->d_name, path, head);
+            snprintf(path, sizeof(path), "%s/%s", parent_dir, entry->d_name);
+            read_directory(entry->d_name, path, dest_dir);
             chdir("..");
         }
         else // Is a file
         {
-            char filename[PATH_MAX_LENGTH];
-            snprintf(filename, sizeof(filename), "%s/%s", parent_directory, entry->d_name);
-            head = push_node(head, filename);
+            char filepath[PATH_MAX_LENGTH];
+            snprintf(filepath, sizeof(filepath), "%s/%s", parent_dir, entry->d_name);
+            // printf("Filepath: %s\n", filepath);
+            char *new_filename = change_root_name(filepath, dest_dir);
+            printf("New filename: %s\n", new_filename);
+            free(new_filename);
         }
     }
     closedir(dirp);
