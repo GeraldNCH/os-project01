@@ -2,33 +2,72 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "utils.h"
-// #include "files-list.h"
+#include <libgen.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/msg.h>
+#include <sys/stat.h>
+#include <string.h>
+
+#define POOL_SIZE 10
 
 int main()
 {
     char cwd[PATH_MAX_LENGTH];
     printf("CWD: %s\n", getcwd(cwd, sizeof(cwd)));
 
-    struct node *head = NULL;
+    // read_directory("test", "test", "hola");
 
-    head = read_directory("test", "test", head);
-
-    printf("Read directory succesfull\n");
-
-    print_list(head);
-    delete_list(head);
-
-    // char *new_filename = get_new_filename("test01/test/files/test-01.txt", "test/copy");
+    // create_dir("nuevo");
+    // char *copy = "test/files/otro/si.csv";
+    // char *new_dir = change_root_name("test/files", "nuevo");
+    // printf("%s\n", new_dir);
+    // new_dir = dirname(new_dir);
+    // create_dir(new_dir);
+    // char *new_filename = change_root_name(copy, "nuevo");
+    // printf("new filename: %s\n", new_filename);
+    // copy_file(copy, new_filename);
     // free(new_filename);
 
-    // copy_file("../test/files/test-01.txt", "../test/copy/test-01.txt");
-    // printf("File 1 copied\n");
+    key_t msqkey = 999;
+    int msqid = msgget(msqkey, IPC_CREAT | S_IRUSR | S_IWUSR); // create queue
 
-    // copy_file("../test/files/test-02.txt", "../test/copy/test-02.txt");
-    // printf("File 2 copied\n");
+    struct msgbuf temp;
 
-    // copy_file("../test/files/test-03.txt", "../test/copy/test-03.txt");
-    // printf("File 3 copied\n");
+    long pids[POOL_SIZE];
+    long pid;
+    int status;
+    for (int i = 0; i < POOL_SIZE; i++)
+    {
+        pid = fork();
+        if (pid == 0)
+        {
+            break;
+        }
+        // printf("pid: %ld\n", pid);
+        pids[i] = pid;
+    }
+    // if (pid != 0) // parent
+    // {
+    //     temp.mtype = COPY_FILE;
+    //     strcpy(temp.mtext, "nuevo/hola.txt");
+    //     msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), IPC_NOWAIT);
 
-    return 0;
+    //     temp.mtype = COPY_FILE;
+    //     strcpy(temp.mtext, "nuevo/mundo.txt");
+    //     msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), IPC_NOWAIT);
+    //     wait(&status);
+    //     msgctl(msqid, IPC_RMID, NULL); // delete queue
+    //     exit(0);
+    // }
+    // else
+    // {
+    //     printf("Process: %d waiting\n", getpid());
+    //     int result = msgrcv(msqid, &temp, PATH_MAX_LENGTH, 0, 1);
+    //     if (result != -1)
+    //     {
+    //         printf("Process: %d received: %s\n", getpid(), temp.mtext);
+    //     }
+    //     exit(0);
+    // }
 }
