@@ -7,34 +7,39 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sys/msg.h>
 #include "utils.h"
 
-void create_dir(char *relative_path)
+bool create_dir(char *relative_path)
 {
     struct stat sb;
     if (stat(relative_path, &sb) == -1)
     {
-        mkdir(relative_path, S_IRWXU);
+        if (mkdir(relative_path, S_IRWXU) == 0)
+        {
+            return true;
+        }
+        return false;
     }
+    return true;
 }
 
-void copy_file(char *filename, char *new_filename)
+bool copy_file(char *filename, char *new_filename)
 {
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
-        perror("Reading file");
-        // printf("Error opening the file %s to read the file content\n", filename);
-        exit(1);
+        perror(filename);
+        return false;
     }
 
     FILE *new_file = fopen(new_filename, "w");
     if (new_file == NULL)
     {
-        perror("Writing file");
+        perror(new_filename);
         // printf("Error creating the file %s to write the file content\n", new_filename);
         // free(new_filename);
-        exit(1);
+        return false;
     }
 
     // Get file size
@@ -53,10 +58,10 @@ void copy_file(char *filename, char *new_filename)
     free(content);
     content = NULL;
 
-    return;
+    return true;
 }
 
-// The return has to be freed
+// The returned string has to be freed
 char *change_root_name(char *src_filename, char *dest_dir)
 {
     // printf("Get new filename function\n");
@@ -104,7 +109,7 @@ char *change_root_name(char *src_filename, char *dest_dir)
     return new_filename;
 }
 
-void read_directory(char *dir_name, char *parent_dir, char *dest_dir)
+void read_directory(char *dir_name, char *parent_dir, char *dest_dir, int msqid, int *actions_count)
 {
     DIR *dirp = opendir(dir_name);
     if (dirp == NULL)
@@ -123,6 +128,8 @@ void read_directory(char *dir_name, char *parent_dir, char *dest_dir)
     struct dirent *entry;
     struct stat sb;
 
+    printf("msqid: %d\n", msqid);
+
     while ((entry = readdir(dirp)) != NULL)
     {
         if (stat(entry->d_name, &sb) == -1)
@@ -140,7 +147,22 @@ void read_directory(char *dir_name, char *parent_dir, char *dest_dir)
         {
             char path[PATH_MAX_LENGTH];
             snprintf(path, sizeof(path), "%s/%s", parent_dir, entry->d_name);
-            read_directory(entry->d_name, path, dest_dir);
+
+            struct msgbuf temp;
+            temp.mtype = CREATE_DIR;
+            strcpy(temp.mtext, path);
+
+            printf("Queue full: %d\n", is_queue_full(msqid));
+
+            if (msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), IPC_NOWAIT) != 0)
+            {
+                perror("msgsnd");
+                exit(-1);
+            }
+
+            (*actions_count)++;
+
+            read_directory(entry->d_name, path, dest_dir, msqid, actions_count);
             chdir("..");
         }
         else // Is a file
@@ -148,10 +170,37 @@ void read_directory(char *dir_name, char *parent_dir, char *dest_dir)
             char filepath[PATH_MAX_LENGTH];
             snprintf(filepath, sizeof(filepath), "%s/%s", parent_dir, entry->d_name);
             // printf("Filepath: %s\n", filepath);
-            char *new_filename = change_root_name(filepath, dest_dir);
-            printf("New filename: %s\n", new_filename);
-            free(new_filename);
+
+            struct msgbuf temp;
+            temp.mtype = COPY_FILE;
+            strcpy(temp.mtext, filepath);
+
+            printf("Queue full: %d\n", is_queue_full(msqid));
+
+            if (msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), IPC_NOWAIT) != 0)
+            {
+                perror("msgsnd");
+                exit(-1);
+            }
+
+            (*actions_count)++;
         }
     }
     closedir(dirp);
+}
+
+bool is_queue_full(int msqid)
+{
+    struct msqid_ds queue_stats;
+    if (msgctl(msqid, IPC_STAT, &queue_stats) == -1)
+    {
+        perror("msgctl");
+        exit(-1);
+    }
+
+    if (queue_stats.msg_qbytes == queue_stats.__msg_cbytes)
+    {
+        return true;
+    }
+    return false;
 }
