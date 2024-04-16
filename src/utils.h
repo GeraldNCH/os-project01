@@ -1,6 +1,19 @@
-#include "files-list.h"
-
 #define PATH_MAX_LENGTH 4095
-void copy_file(char *filename, char *new_filename01);
-char *get_new_filename(char *src_filename, char *dest_dir);
-struct node *read_directory(char *directory_name, char *parent_directory, struct node *head);
+
+#define COPY_FILE 1
+#define CREATE_DIR 2
+#define DONE 3
+
+struct msgbuf
+{
+    long mtype; // dest_pid
+    char mtext[PATH_MAX_LENGTH];
+};
+
+void create_dir(char *relative_path);
+
+void copy_file(char *filename, char *new_filename);
+
+char *change_root_name(char *src_filename, char *dest_dir);
+
+void read_directory(char *dir_name, char *parent_dir, char *dest_dir);
