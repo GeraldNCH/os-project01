@@ -1,4 +1,8 @@
-struct files_list;
+struct files_list
+{
+    char *filename;
+    struct files_list *next;
+};
 
 typedef struct files_list *node;
 

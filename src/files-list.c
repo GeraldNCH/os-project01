@@ -2,12 +2,6 @@
 #include <stdlib.h>
 #include "files-list.h"
 
-struct files_list
-{
-    char *filename;
-    struct files_list *next;
-};
-
 node create_node(char *filename)
 {
     node temp;
