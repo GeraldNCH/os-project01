@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <linux/limits.h>
-#include "copy-file.h"
 #include "utils.h"
 
 int main()

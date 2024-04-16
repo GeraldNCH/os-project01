@@ -1,1 +1,0 @@
-void copy_file(char *filename, char *new_filename01);
