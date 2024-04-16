@@ -1,0 +1,1 @@
+char *get_new_filename(char *src_filename, char *dest_dir);
