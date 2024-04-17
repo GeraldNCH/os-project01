@@ -56,8 +56,6 @@ void send_msg(int msqid, long type, char *msg, bool flag)
     temp.mtype = type;
     strcpy(temp.mtext, msg);
 
-    printf("Sent message: %s\n", temp.mtext);
-
     if (flag)
     {
         if (msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), IPC_NOWAIT) != 0)
@@ -75,16 +73,38 @@ void send_msg(int msqid, long type, char *msg, bool flag)
 }
 
 // Receive a message from a message queue.
-// The returned string has to be freed.
-void receive_msg(int msqid, struct msgbuf *temp, long type, bool flag)
+// The return value indicates if a message was received.
+bool receive_msg(int msqid, struct msgbuf *temp, long type, bool flag)
 {
     if (flag)
     {
-        (msgrcv(msqid, temp, MAX_MSG_LEN, type, IPC_NOWAIT) != 0);
+        return (msgrcv(msqid, temp, MAX_MSG_LEN, type, IPC_NOWAIT) == -1) ? false : true;
     }
     else
     {
-        (msgrcv(msqid, temp, MAX_MSG_LEN, type, 0) != 0);
+        msgrcv(msqid, temp, MAX_MSG_LEN, type, 0);
+        return true;
     }
-    printf("Received message: %s\n", (*temp).mtext);
+}
+
+int len_msg_queue(int msqid)
+{
+    struct msqid_ds buf;
+    if (msgctl(msqid, IPC_STAT, &buf) != 0)
+    {
+        perror("msgctl");
+        exit(-1);
+    }
+    return buf.msg_qnum;
+}
+
+pid_t get_last_sender(int msqid)
+{
+    struct msqid_ds buf;
+    if (msgctl(msqid, IPC_STAT, &buf) != 0)
+    {
+        perror("msgctl");
+        exit(-1);
+    }
+    return buf.msg_lspid;
 }

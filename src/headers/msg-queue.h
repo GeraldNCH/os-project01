@@ -20,4 +20,8 @@ void delete_msg_queue(int msqid);
 
 void send_msg(int msqid, long type, char *msg, bool flag);
 
-void receive_msg(int msqid, struct msgbuf *temp, long type, bool flag);
+bool receive_msg(int msqid, struct msgbuf *temp, long type, bool flag);
+
+int len_msg_queue(int msqid);
+
+pid_t get_last_sender(int msqid);
