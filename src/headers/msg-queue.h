@@ -2,8 +2,9 @@
 
 #define MAX_MSG_LEN 4095
 
-#define COPY_FILE 1
-#define DONE 2
+#define CREATE_DIR 1
+#define COPY_FILE 2
+#define DONE 3
 
 struct msgbuf
 {
@@ -19,4 +20,4 @@ void delete_msg_queue(int msqid);
 
 void send_msg(int msqid, long type, char *msg, bool flag);
 
-char *receive_msg(int msqid, long type, bool flag);
+void receive_msg(int msqid, struct msgbuf *temp, long type, bool flag);

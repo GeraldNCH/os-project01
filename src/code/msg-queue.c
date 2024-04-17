@@ -56,6 +56,8 @@ void send_msg(int msqid, long type, char *msg, bool flag)
     temp.mtype = type;
     strcpy(temp.mtext, msg);
 
+    printf("Sent message: %s\n", temp.mtext);
+
     if (flag)
     {
         if (msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), IPC_NOWAIT) != 0)
@@ -65,29 +67,24 @@ void send_msg(int msqid, long type, char *msg, bool flag)
     }
     else
     {
-        if (msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), !IPC_NOWAIT) != 0)
+        if (msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), 0) != 0)
         {
             perror("msgsnd");
         }
     }
 }
 
-char *receive_msg(int msqid, long type, bool flag)
+// Receive a message from a message queue.
+// The returned string has to be freed.
+void receive_msg(int msqid, struct msgbuf *temp, long type, bool flag)
 {
-    struct msgbuf temp;
     if (flag)
     {
-        if (msgrcv(msqid, &temp, MAX_MSG_LEN, type, IPC_NOWAIT) != 0)
-        {
-            perrro("msgrcv");
-        }
+        (msgrcv(msqid, temp, MAX_MSG_LEN, type, IPC_NOWAIT) != 0);
     }
     else
     {
-        if (msgrcv(msqid, &temp, MAX_MSG_LEN, type, !IPC_NOWAIT) != 0)
-        {
-            perror("msgrcv");
-        }
+        (msgrcv(msqid, temp, MAX_MSG_LEN, type, 0) != 0);
     }
-    return temp.mtext;
+    printf("Received message: %s\n", (*temp).mtext);
 }
