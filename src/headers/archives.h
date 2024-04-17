@@ -1,9 +1,9 @@
 #include <stdbool.h>
 
-bool create_dir(char *relative_path);
+void create_dir(char *path);
 
-bool copy_file(char *filename, char *new_filename);
+bool copy_file(char *src_filepath, char *dest_filepath);
 
-char *change_root_name(char *src_filename, char *dest_dir);
+char *change_root_name(char *old_path, char *new_name);
 
-void read_directory(char *dir_name, char *parent_dir, char *dest_dir, int msqid, int *actions_count);
+void copy_directory(char *dir_name, char *current_path, char *dest_dir, int msqid, int *available_processes);

@@ -30,20 +30,21 @@ bool copy_file(char *src_filepath, char *dest_filepath)
 {
     char *temp_str = strdup(dest_filepath);
     char *new_dest_dir = dirname(temp_str);
-    free(temp_str);
+    printf("new_dest_dir: %s\n", new_dest_dir);
     create_dir(new_dest_dir);
+    free(temp_str);
 
     FILE *file = fopen(src_filepath, "r");
     if (file == NULL)
     {
-        perror("fopen");
+        perror("fopen src file");
         return false;
     }
 
     FILE *new_file = fopen(dest_filepath, "w");
     if (new_file == NULL)
     {
-        perror("fopen");
+        perror("fopen dest file");
         return false;
     }
 
@@ -113,32 +114,36 @@ char *change_root_name(char *old_path, char *new_name)
     return new_filename;
 }
 
-void read_directory(char *dir_name, char *parent_dir, char *dest_dir, int msqid, int *actions_count)
+void copy_directory(char *dir_name, char *current_path, char *dest_dir, int msqid, int *available_processes)
 {
     DIR *dirp = opendir(dir_name);
     if (dirp == NULL)
     {
-        printf("Cannot open the directory\n");
-        return;
+        perror("opendir");
+        exit(-1);
     }
 
-    int result = chdir(dir_name);
-    if (result != 0)
+    if (chdir(dir_name) != 0) // Change process cwd
     {
-        perror("Error");
-        return;
+        perror("chdir");
+        exit(-1);
     }
 
     struct dirent *entry;
     struct stat sb;
 
-    printf("msqid: %d\n", msqid);
-
     while ((entry = readdir(dirp)) != NULL)
     {
-        if (stat(entry->d_name, &sb) == -1)
+        // while ((*available_processes) == 0) // Wait for a process to be available to continue
+        // {
+        //     struct msgbuf temp;
+        //     receive_msg(msqid, &temp, DONE, false);
+        //     (*available_processes)++;
+        // }
+
+        if (stat(entry->d_name, &sb) != 0)
         {
-            perror("Error");
+            perror("stat");
             continue;
         }
 
@@ -149,45 +154,28 @@ void read_directory(char *dir_name, char *parent_dir, char *dest_dir, int msqid,
 
         if (S_ISDIR(sb.st_mode) != 0) // Is a directory
         {
-            char path[PATH_MAX_LENGTH];
-            snprintf(path, sizeof(path), "%s/%s", parent_dir, entry->d_name);
+            char path[MAX_MSG_LEN];
+            snprintf(path, sizeof(path), "%s/%s", current_path, entry->d_name);
 
-            struct msgbuf temp;
-            temp.mtype = CREATE_DIR;
-            strcpy(temp.mtext, path);
+            send_msg(msqid, CREATE_DIR, path, false);
+            (*available_processes)--;
 
-            printf("Queue full: %d\n", is_queue_full(msqid));
+            copy_directory(entry->d_name, path, dest_dir, msqid, available_processes);
 
-            if (msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), IPC_NOWAIT) != 0)
+            if (chdir("..") != 0) // Return process to previous path
             {
-                perror("msgsnd");
+                perror("chdir");
                 exit(-1);
             }
-
-            (*actions_count)++;
-
-            read_directory(entry->d_name, path, dest_dir, msqid, actions_count);
-            chdir("..");
         }
         else // Is a file
         {
-            char filepath[PATH_MAX_LENGTH];
-            snprintf(filepath, sizeof(filepath), "%s/%s", parent_dir, entry->d_name);
+            char filepath[MAX_MSG_LEN];
+            snprintf(filepath, sizeof(filepath), "%s/%s", current_path, entry->d_name);
             // printf("Filepath: %s\n", filepath);
 
-            struct msgbuf temp;
-            temp.mtype = COPY_FILE;
-            strcpy(temp.mtext, filepath);
-
-            printf("Queue full: %d\n", is_queue_full(msqid));
-
-            if (msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), IPC_NOWAIT) != 0)
-            {
-                perror("msgsnd");
-                exit(-1);
-            }
-
-            (*actions_count)++;
+            send_msg(msqid, COPY_FILE, filepath, false);
+            (*available_processes)--;
         }
     }
     closedir(dirp);
