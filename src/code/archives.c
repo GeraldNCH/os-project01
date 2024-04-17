@@ -15,6 +15,8 @@
 // Create a directory if not exists.
 void create_dir(char *path)
 {
+    printf("FUNCTION create_dir\n");
+
     struct stat sb;
     if (stat(path, &sb) == -1)
     {
@@ -25,23 +27,19 @@ void create_dir(char *path)
     }
 }
 
-// Copy a file in a new destination and creates the destination path if not exists.
+// Copies a file in the specified path.
 bool copy_file(char *src_filepath, char *dest_filepath)
 {
-    char *temp_str = strdup(dest_filepath);
-    char *new_dest_dir = dirname(temp_str);
-    printf("new_dest_dir: %s\n", new_dest_dir);
-    create_dir(new_dest_dir);
-    free(temp_str);
+    printf("FUNCTION copy_file ARGS src_filepath: %s, dest_filepath:%s\n", src_filepath, dest_filepath);
 
-    FILE *file = fopen(src_filepath, "r");
+    FILE *file = fopen(src_filepath, "rb");
     if (file == NULL)
     {
         perror("fopen src file");
         return false;
     }
 
-    FILE *new_file = fopen(dest_filepath, "w");
+    FILE *new_file = fopen(dest_filepath, "wb");
     if (new_file == NULL)
     {
         perror("fopen dest file");
@@ -71,6 +69,8 @@ bool copy_file(char *src_filepath, char *dest_filepath)
 // The returned string has to be freed.
 char *change_root_name(char *old_path, char *new_name)
 {
+    printf("FUNCTION change_root_name ARGS old_path: %s, new_name: %s\n", old_path, new_name);
+
     char *temp_src_filename_01, *temp_src_filename_02;
     temp_src_filename_01 = strdup(old_path);
     temp_src_filename_02 = strdup(old_path);
@@ -116,6 +116,8 @@ char *change_root_name(char *old_path, char *new_name)
 
 void copy_directory(char *dir_name, char *current_path, char *dest_dir, int msqid, int *available_processes)
 {
+    printf("FUNCTION copy_directory ARGS dir_name: %s, current_path: %s, dest_dir: %s, msqid: %d, available_processes: %d\n", dir_name, current_path, dest_dir, msqid, (*available_processes));
+
     DIR *dirp = opendir(dir_name);
     if (dirp == NULL)
     {
@@ -134,12 +136,26 @@ void copy_directory(char *dir_name, char *current_path, char *dest_dir, int msqi
 
     while ((entry = readdir(dirp)) != NULL)
     {
-        // while ((*available_processes) == 0) // Wait for a process to be available to continue
-        // {
-        //     struct msgbuf temp;
-        //     receive_msg(msqid, &temp, DONE, false);
-        //     (*available_processes)++;
-        // }
+        if (get_last_sender(msqid) != getpid())
+        {
+            int queue_len = len_msg_queue(msqid);
+            for (int i = 0; i < queue_len; i++)
+            {
+                struct msgbuf temp;
+                bool result = receive_msg(msqid, &temp, DONE, true);
+                if (result)
+                {
+                    (*available_processes)++;
+                }
+            }
+        }
+
+        while ((*available_processes) == 0) // Wait for a process to be available to continue
+        {
+            struct msgbuf temp;
+            receive_msg(msqid, &temp, DONE, false);
+            (*available_processes)++;
+        }
 
         if (stat(entry->d_name, &sb) != 0)
         {
