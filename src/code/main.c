@@ -72,10 +72,11 @@ int main(int argc, char **argv)
         int available_processes = PROCESS_POOL_SIZE;
         copy_directory(src_dir, src_dir, dest_dir, msqid, &available_processes);
 
-        while (!is_msg_queue_empty(msqid))
+        while (!is_msg_queue_empty(msqid) || available_processes != 2)
         {
             struct msgbuf temp;
             receive_msg(msqid, &temp, DONE, false);
+            available_processes++;
         }
 
         delete_process_pool(pids);
@@ -97,8 +98,12 @@ int main(int argc, char **argv)
             else
             {
                 char *new_filepath = change_root_name(temp.mtext, dest_dir);
-                printf("filepath: %s, new_filepath: %s\n", temp.mtext, new_filepath);
-                copy_file(temp.mtext, new_filepath);
+                // printf("filepath: %s, new_filepath: %s\n", temp.mtext, new_filepath);
+                bool result;
+                do
+                {
+                    result = copy_file(temp.mtext, new_filepath);
+                } while (!result);
                 free(new_filepath);
             }
             send_msg(msqid, DONE, "Action completed", false);
