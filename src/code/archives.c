@@ -114,6 +114,7 @@ char *change_root_name(char *old_path, char *new_name)
     return new_filename;
 }
 
+// Copy the contents of a source directory to a destination directory.
 void copy_directory(char *dir_name, char *current_path, char *dest_dir, int msqid, int *available_processes)
 {
     printf("FUNCTION copy_directory ARGS dir_name: %s, current_path: %s, dest_dir: %s, msqid: %d, available_processes: %d\n", dir_name, current_path, dest_dir, msqid, (*available_processes));

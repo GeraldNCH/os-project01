@@ -10,6 +10,8 @@
 
 #include "../headers/msg-queue.h"
 
+// Creates a message queue.
+// Returns the msqid.
 int create_msg_queue()
 {
     key_t msqkey = 999;
@@ -30,6 +32,8 @@ int create_msg_queue()
     return msqid;
 }
 
+// Check if message queue is empty.
+// The return indicates if it's empty.
 bool is_msg_queue_empty(int msqid)
 {
     struct msqid_ds buf;
@@ -41,6 +45,7 @@ bool is_msg_queue_empty(int msqid)
     return (buf.msg_qnum == 0) ? true : false;
 }
 
+// Delete the specified message queue.
 void delete_msg_queue(int msqid)
 {
     if (msgctl(msqid, IPC_RMID, NULL) != 0)
@@ -50,6 +55,7 @@ void delete_msg_queue(int msqid)
     }
 }
 
+// Sends a message in the specified queue.
 void send_msg(int msqid, long type, char *msg, bool flag)
 {
     struct msgbuf temp;
@@ -87,6 +93,7 @@ bool receive_msg(int msqid, struct msgbuf *temp, long type, bool flag)
     }
 }
 
+// Get message queue len.
 int len_msg_queue(int msqid)
 {
     struct msqid_ds buf;
@@ -98,6 +105,7 @@ int len_msg_queue(int msqid)
     return buf.msg_qnum;
 }
 
+// Get last message sender pid.
 pid_t get_last_sender(int msqid)
 {
     struct msqid_ds buf;
