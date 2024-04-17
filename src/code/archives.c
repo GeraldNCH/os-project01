@@ -8,37 +8,42 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/msg.h>
-#include "utils.h"
 
-bool create_dir(char *relative_path)
+#include "../headers/archives.h"
+#include "../headers/msg-queue.h"
+
+// Create a directory if not exists.
+void create_dir(char *path)
 {
     struct stat sb;
-    if (stat(relative_path, &sb) == -1)
+    if (stat(path, &sb) == -1)
     {
-        if (mkdir(relative_path, S_IRWXU) == 0)
+        if (mkdir(path, S_IRWXU) != 0)
         {
-            return true;
+            perror("mkdir");
         }
-        return false;
     }
-    return true;
 }
 
-bool copy_file(char *filename, char *new_filename)
+// Copy a file in a new destination and creates the destination path if not exists.
+bool copy_file(char *src_filepath, char *dest_filepath)
 {
-    FILE *file = fopen(filename, "r");
+    char *temp_str = strdup(dest_filepath);
+    char *new_dest_dir = dirname(temp_str);
+    free(temp_str);
+    create_dir(new_dest_dir);
+
+    FILE *file = fopen(src_filepath, "r");
     if (file == NULL)
     {
-        perror(filename);
+        perror("fopen");
         return false;
     }
 
-    FILE *new_file = fopen(new_filename, "w");
+    FILE *new_file = fopen(dest_filepath, "w");
     if (new_file == NULL)
     {
-        perror(new_filename);
-        // printf("Error creating the file %s to write the file content\n", new_filename);
-        // free(new_filename);
+        perror("fopen");
         return false;
     }
 
@@ -61,14 +66,13 @@ bool copy_file(char *filename, char *new_filename)
     return true;
 }
 
-// The returned string has to be freed
-char *change_root_name(char *src_filename, char *dest_dir)
+// Change the first element of the path for the new specified name.
+// The returned string has to be freed.
+char *change_root_name(char *old_path, char *new_name)
 {
-    // printf("Get new filename function\n");
-
     char *temp_src_filename_01, *temp_src_filename_02;
-    temp_src_filename_01 = strdup(src_filename);
-    temp_src_filename_02 = strdup(src_filename);
+    temp_src_filename_01 = strdup(old_path);
+    temp_src_filename_02 = strdup(old_path);
 
     char *filename = basename(temp_src_filename_01);
     char *dir = dirname(temp_src_filename_02);
@@ -81,9 +85,9 @@ char *change_root_name(char *src_filename, char *dest_dir)
 
     if (dir[0] == dot || strchr(dir, slash) == NULL)
     {
-        new_filename = malloc(sizeof(filename) + sizeof(dest_dir) + 2);
+        new_filename = malloc(sizeof(filename) + sizeof(new_name) + 2);
         new_filename[0] = '\0';
-        strcat(new_filename, dest_dir);
+        strcat(new_filename, new_name);
         strcat(new_filename, "/");
         strcat(new_filename, filename);
     }
@@ -91,9 +95,9 @@ char *change_root_name(char *src_filename, char *dest_dir)
     {
         char *ptr = strchr(dir, slash);
         ptr++;
-        new_filename = malloc(sizeof(filename) + sizeof(ptr) + sizeof(dest_dir) + 3);
+        new_filename = malloc(sizeof(filename) + sizeof(ptr) + sizeof(new_name) + 3);
         new_filename[0] = '\0';
-        strcat(new_filename, dest_dir);
+        strcat(new_filename, new_name);
         strcat(new_filename, "/");
         strcat(new_filename, ptr);
         strcat(new_filename, "/");
@@ -187,20 +191,4 @@ void read_directory(char *dir_name, char *parent_dir, char *dest_dir, int msqid,
         }
     }
     closedir(dirp);
-}
-
-bool is_queue_full(int msqid)
-{
-    struct msqid_ds queue_stats;
-    if (msgctl(msqid, IPC_STAT, &queue_stats) == -1)
-    {
-        perror("msgctl");
-        exit(-1);
-    }
-
-    if (queue_stats.msg_qbytes == queue_stats.__msg_cbytes)
-    {
-        return true;
-    }
-    return false;
 }
