@@ -14,8 +14,6 @@ int main(int argc, char **argv)
 {
     int parent_pid = getpid();
 
-    create_log_file();
-
     if (argc != 3)
     {
         printf("You must pass 3 arguments to the program\n");
@@ -60,8 +58,10 @@ int main(int argc, char **argv)
 
     printf("ORIGINAL PATH: %s, SRC_PATH: %s, DEST_PATH: %s\n", original_path, src_path, dest_path);
 
-    // char cwd[MAX_MSG_LEN];
-    // printf("CWD: %s\n", getcwd(cwd, sizeof(cwd)));
+    // Initialize log file
+    char log_file_path[MAX_MSG_LEN];
+    snprintf(log_file_path, sizeof(log_file_path), "%s/%s", original_path, "log-file.csv");
+    create_log_file(log_file_path);
 
     int msqid = create_msg_queue();
 
