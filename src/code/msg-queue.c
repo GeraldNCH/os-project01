@@ -58,7 +58,7 @@ void delete_msg_queue(int msqid)
 // Sends a message in the specified queue.
 void send_msg(int msqid, int type, char *msg, int action, int sender_pid, double copy_duration, bool flag)
 {
-    printf("FUNCTION send_msg ARGS msqid: %d, type: %d, action: %d, sender_pid: %d, msg: %s, flag: %d\n", msqid, type, action, sender_pid, msg, flag);
+    printf("FUNCTION send_msg ARGS msqid: %d, type: %d, msg: %s, action: %d, sender_pid: %d, copy_duration: %lf, flag: %d\n", msqid, type, msg, action, sender_pid, copy_duration, flag);
     struct msgbuf temp;
     temp.mtype = type;
     strcpy(temp.mtext, msg);
@@ -68,14 +68,14 @@ void send_msg(int msqid, int type, char *msg, int action, int sender_pid, double
 
     if (flag)
     {
-        if (msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), IPC_NOWAIT) != 0)
+        if (msgsnd(msqid, (void *)&temp, sizeof(struct msgbuf) - sizeof(long), IPC_NOWAIT) != 0)
         {
             perror("msgsnd");
         }
     }
     else
     {
-        if (msgsnd(msqid, (void *)&temp, sizeof(temp.mtext), 0) != 0)
+        if (msgsnd(msqid, (void *)&temp, sizeof(struct msgbuf) - sizeof(long), 0) != 0)
         {
             perror("msgsnd");
         }
@@ -89,11 +89,11 @@ bool receive_msg(int msqid, struct msgbuf *temp, int type, bool flag)
     printf("FUNCTION receive_msg ARGS msqid: %d, type: %d, flag: %d\n", msqid, type, flag);
     if (flag)
     {
-        return (msgrcv(msqid, temp, MAX_MSG_LEN, type, IPC_NOWAIT) == -1) ? false : true;
+        return (msgrcv(msqid, temp, sizeof(struct msgbuf) - sizeof(long), type, IPC_NOWAIT) == -1) ? false : true;
     }
     else
     {
-        msgrcv(msqid, temp, MAX_MSG_LEN, type, 0);
+        msgrcv(msqid, temp, sizeof(struct msgbuf) - sizeof(long), type, 0);
         return true;
     }
 }
