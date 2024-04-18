@@ -138,7 +138,7 @@ bool copy_file(char *src_filepath, char *dest_filepath)
 // Copy the contents of a source directory to a destination directory.
 void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_pool_control *processes_control)
 {
-    printf("FUNCTION copy_directory ARGS src_dir: %s, dest_dir: %s, msqid: %d", src_dir, dest_dir, msqid);
+    printf("FUNCTION copy_directory ARGS src_dir: %s, dest_dir: %s, msqid: %d, processes_control.available_processes: %d\n", src_dir, dest_dir, msqid, processes_control->available_processes);
 
     DIR *dirp = opendir(src_dir);
     if (dirp == NULL)
@@ -164,21 +164,21 @@ void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_poo
             for (int i = 0; i < queue_len; i++)
             {
                 struct msgbuf temp;
-                bool result = receive_msg(msqid, &temp, getpid(), DONE, true);
+                bool result = receive_msg(msqid, &temp, getpid(), true);
                 if (result)
                 {
-                    set_process_state((*processes_control).pids, temp.sender_pid, 1);
-                    (*processes_control).available_processes++;
+                    set_process_state(processes_control->pids, temp.sender_pid, 1);
+                    processes_control->available_processes++;
                 }
             }
         }
 
-        while ((*processes_control).available_processes == 0) // Wait for a process to be available to continue
+        while (processes_control->available_processes == 0) // Wait for a process to be available to continue
         {
             struct msgbuf temp;
-            receive_msg(msqid, &temp, getpid(), DONE, false);
-            set_process_state((*processes_control).pids, temp.sender_pid, 1);
-            (*processes_control).available_processes++;
+            receive_msg(msqid, &temp, getpid(), false);
+            set_process_state(processes_control->pids, temp.sender_pid, 1);
+            processes_control->available_processes++;
         }
 
         if (stat(entry->d_name, &sb) != 0)
@@ -198,13 +198,7 @@ void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_poo
             snprintf(new_src_dir, sizeof(new_src_dir), "%s/%s", src_dir, entry->d_name);
             snprintf(new_dest_dir, sizeof(new_dest_dir), "%s/%s", dest_dir, entry->d_name);
 
-            int pid = get_free_process_pid((*processes_control).pids);
-
-            send_msg(msqid, pid, CHANGE_DIR, getpid(), dest_dir, false);
-            send_msg(msqid, pid, CREATE_DIR, getpid(), new_dest_dir, false);
-
-            set_process_state((*processes_control).pids, pid, 0);
-            (*processes_control).available_processes--;
+            create_dir(new_dest_dir);
 
             copy_directory(new_src_dir, new_dest_dir, msqid, processes_control);
 
@@ -218,15 +212,17 @@ void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_poo
         {
             char filepath[MAX_MSG_LEN];
             snprintf(filepath, sizeof(filepath), "%s/%s", src_dir, entry->d_name);
-            // printf("Filepath: %s\n", filepath);
 
-            int pid = get_free_process_pid((*processes_control).pids);
+            int pid = get_free_process_pid(processes_control->pids);
 
             send_msg(msqid, pid, CHANGE_DIR, getpid(), dest_dir, false);
+            struct msgbuf temp;
+            receive_msg(msqid, &temp, getpid(), false);
+
             send_msg(msqid, pid, COPY_FILE, getpid(), filepath, false);
 
-            set_process_state((*processes_control).pids, pid, 0);
-            (*processes_control).available_processes--;
+            set_process_state(processes_control->pids, pid, 0);
+            processes_control->available_processes--;
         }
     }
     closedir(dirp);
