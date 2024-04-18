@@ -27,6 +27,16 @@ void create_dir(char *path)
     }
 }
 
+// Compare 2 directories.
+// Return true if they are the same and false if they are different.
+bool compare_directory(char *path)
+{
+    char cwd[MAX_MSG_LEN];
+    getcwd(cwd, sizeof(cwd));
+
+    return (strcmp(cwd, path) == 0) ? true : false;
+}
+
 // Copies a file in the specified path.
 bool copy_file(char *src_filepath, char *dest_filepath)
 {

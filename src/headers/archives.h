@@ -2,6 +2,8 @@
 
 void create_dir(char *path);
 
+bool compare_directory(char *path);
+
 bool copy_file(char *src_filepath, char *dest_filepath);
 
 char *change_root_name(char *old_path, char *new_name);
