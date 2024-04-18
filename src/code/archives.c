@@ -177,6 +177,7 @@ void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_poo
         {
             struct msgbuf temp;
             receive_msg(msqid, &temp, getpid(), DONE, false);
+            set_process_state((*processes_control).pids, temp.sender_pid, 1);
             (*processes_control).available_processes++;
         }
 
@@ -195,7 +196,7 @@ void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_poo
         {
             char new_src_dir[MAX_MSG_LEN], new_dest_dir[MAX_MSG_LEN];
             snprintf(new_src_dir, sizeof(new_src_dir), "%s/%s", src_dir, entry->d_name);
-            snprintf(new_dest_dir, sizeof(new_dest_dir), "%s/%s", src_dir, entry->d_name);
+            snprintf(new_dest_dir, sizeof(new_dest_dir), "%s/%s", dest_dir, entry->d_name);
 
             int pid = get_free_process_pid((*processes_control).pids);
 
