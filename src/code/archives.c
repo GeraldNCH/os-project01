@@ -129,7 +129,7 @@ bool copy_file(char *src_filepath, char *dest_filepath)
 // }
 
 // Copy the contents of a source directory to a destination directory.
-void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_pool_control *processes_control)
+void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_pool_control *processes_control, char *log_file_path)
 {
     printf("FUNCTION copy_directory ARGS src_dir: %s, dest_dir: %s, msqid: %d, processes_control.available_processes: %d\n", src_dir, dest_dir, msqid, processes_control->available_processes);
 
@@ -160,6 +160,7 @@ void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_poo
                 bool result = receive_msg(msqid, &temp, getpid(), true);
                 if (result)
                 {
+                    add_entry_log_file(log_file_path, temp.mtext, temp.sender_pid, temp.copy_duration);
                     set_process_state(processes_control->pids, temp.sender_pid, 1);
                     processes_control->available_processes++;
                 }
@@ -170,6 +171,7 @@ void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_poo
         {
             struct msgbuf temp;
             receive_msg(msqid, &temp, getpid(), false);
+            add_entry_log_file(log_file_path, temp.mtext, temp.sender_pid, temp.copy_duration);
             set_process_state(processes_control->pids, temp.sender_pid, 1);
             processes_control->available_processes++;
         }
