@@ -56,14 +56,15 @@ void delete_msg_queue(int msqid)
 }
 
 // Sends a message in the specified queue.
-void send_msg(int msqid, int type, int action, int sender_pid, char *msg, bool flag)
+void send_msg(int msqid, int type, char *msg, int action, int sender_pid, double copy_duration, bool flag)
 {
     printf("FUNCTION send_msg ARGS msqid: %d, type: %d, action: %d, sender_pid: %d, msg: %s, flag: %d\n", msqid, type, action, sender_pid, msg, flag);
     struct msgbuf temp;
     temp.mtype = type;
+    strcpy(temp.mtext, msg);
     temp.action = action;
     temp.sender_pid = sender_pid;
-    strcpy(temp.mtext, msg);
+    temp.copy_duration = copy_duration;
 
     if (flag)
     {
