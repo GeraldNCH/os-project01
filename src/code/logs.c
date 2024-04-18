@@ -8,29 +8,33 @@
 
 #include "../headers/logs.h"
 
-#define LOGFILE "logfile.csv"
-
 // Function to create the log file (if it does not exist)
-void create_log_file() 
+void create_log_file(char *filepath)
 {
     FILE *file;
-    file = fopen(LOGFILE, "w");
+    file = fopen(filepath, "w");
+    if (file == NULL)
+    {
+        perror("fopen logfile");
+        exit(-1);
+    }
+
     fprintf(file, "File Name,Process ID,Duration\n");
     fclose(file);
 }
 
 // Function to register copy file data in CSV file
-void register_copy_CSV(const char *file_name, pid_t pid, double duration) 
+void add_entry_log_file(const char *filepath, char *filename, int pid, double duration)
 {
     FILE *file;
-    file = fopen(LOGFILE, "a");
-    
-    if (file == NULL) {
+    file = fopen(filepath, "a");
+    if (file == NULL)
+    {
         perror("Error opening file");
         exit(-1);
     }
-    
-    fprintf(file, "%s,%d,%f\n", file_name, pid, duration);
-    
+
+    fprintf(file, "%s,%d,%f\n", filename, pid, duration);
+
     fclose(file);
 }

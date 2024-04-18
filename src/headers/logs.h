@@ -1,8 +1,8 @@
 #ifndef LOGS
 #define LOGS
 
-void create_log_file();
+void create_log_file(char *filepath);
 
-void register_copy_CSV(const char *file_name, pid_t pid, double duration);
+void add_entry_log_file(const char *filepath, char *filename, int pid, double duration);
 
 #endif
