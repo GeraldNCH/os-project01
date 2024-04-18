@@ -12,9 +12,10 @@
 struct msgbuf
 {
     long mtype;
+    char mtext[MAX_MSG_LEN];
     int action;
     int sender_pid;
-    char mtext[MAX_MSG_LEN];
+    double copy_duration;
 };
 
 int create_msg_queue();
@@ -23,7 +24,7 @@ bool is_msg_queue_empty(int msqid);
 
 void delete_msg_queue(int msqid);
 
-void send_msg(int msqid, int type, int action, int sender_pid, char *msg, bool flag);
+void send_msg(int msqid, int type, char *msg, int action, int sender_pid, double copy_duration, bool flag);
 
 bool receive_msg(int msqid, struct msgbuf *temp, int type, bool flag);
 
