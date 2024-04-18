@@ -8,7 +8,7 @@
 
 #include "../headers/logs.h"
 
-// Function to create the log file (if it does not exist)
+// Function to create the log file. Overwrite if exist. 
 void create_log_file(char *filepath)
 {
     FILE *file;
