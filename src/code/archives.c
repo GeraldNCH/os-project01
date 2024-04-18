@@ -31,16 +31,6 @@ void create_dir(char *path)
     }
 }
 
-// Compare 2 directories.
-// Return true if they are the same and false if they are different.
-bool compare_directory(char *path)
-{
-    char cwd[MAX_MSG_LEN];
-    getcwd(cwd, sizeof(cwd));
-
-    return (strcmp(cwd, path) == 0) ? true : false;
-}
-
 // Copies a file in the specified path.
 bool copy_file(char *src_filepath, char *dest_filepath)
 {
@@ -79,54 +69,6 @@ bool copy_file(char *src_filepath, char *dest_filepath)
 
     return true;
 }
-
-// Change the first element of the path for the new specified name.
-// The returned string has to be freed.
-// char *change_root_name(char *old_path, char *new_name)
-// {
-//     printf("FUNCTION change_root_name ARGS old_path: %s, new_name: %s\n", old_path, new_name);
-
-//     char *temp_src_filename_01, *temp_src_filename_02;
-//     temp_src_filename_01 = strdup(old_path);
-//     temp_src_filename_02 = strdup(old_path);
-
-//     char *filename = basename(temp_src_filename_01);
-//     char *dir = dirname(temp_src_filename_02);
-
-//     char *new_filename;
-
-//     char dot = '.', slash = '/';
-
-//     if (dir[0] == dot || strchr(dir, slash) == NULL)
-//     {
-//         size_t filename_len = strlen(filename);
-//         new_filename = malloc(filename_len + strlen(new_name) + 2); // Add 2 for '/' and '\0'
-//         new_filename[0] = '\0';
-//         strcat(new_filename, new_name);
-//         strcat(new_filename, "/");
-//         strcat(new_filename, filename);
-//     }
-//     else
-//     {
-//         char *ptr = strchr(dir, slash);
-//         ptr++;
-//         size_t filename_len = strlen(filename);
-//         size_t ptr_len = strlen(ptr);
-//         new_filename = malloc(filename_len + ptr_len + strlen(new_name) + 3); // Add 3 for '/', '\0', and additional safety
-//         new_filename[0] = '\0';
-//         strcat(new_filename, new_name);
-//         strcat(new_filename, "/");
-//         strcat(new_filename, ptr);
-//         strcat(new_filename, "/");
-//         strcat(new_filename, filename);
-//     }
-
-//     free(temp_src_filename_01);
-//     free(temp_src_filename_02);
-//     temp_src_filename_01 = NULL, temp_src_filename_02 = NULL;
-
-//     return new_filename;
-// }
 
 // Copy the contents of a source directory to a destination directory.
 void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_pool_control *processes_control, char *log_file_path)
