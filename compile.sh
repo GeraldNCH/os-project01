@@ -3,6 +3,7 @@ gcc -o bin/main.o -c src/code/main.c
 gcc -o bin/archives.o -c src/code/archives.c
 gcc -o bin/msg-queue.o -c src/code/msg-queue.c
 gcc -o bin/logs.o -c src/code/logs.c
+gcc -o bin/processes.o -c src/code/processes.c
 
 cd bin
-gcc -o main.out main.o archives.o msg-queue.o logs.o
+gcc -o main.out main.o archives.o msg-queue.o logs.o processes.o
