@@ -79,9 +79,9 @@ bool copy_file(char *src_filepath, char *dest_filepath)
     fclose(src_file);
     fclose(dest_file);
 
-    // Register in log file 
+    // Register in log file
     clock_t end_time = clock();
-    double duration = ((double)(end_time - start_time)) / CLOCKS_PER_SEC * 1000; 
+    double duration = ((double)(end_time - start_time)) / CLOCKS_PER_SEC * 1000;
     register_copy_CSV(dest_filepath, getpid(), duration);
 
     return true;
@@ -89,65 +89,65 @@ bool copy_file(char *src_filepath, char *dest_filepath)
 
 // Change the first element of the path for the new specified name.
 // The returned string has to be freed.
-char *change_root_name(char *old_path, char *new_name)
-{
-    printf("FUNCTION change_root_name ARGS old_path: %s, new_name: %s\n", old_path, new_name);
+// char *change_root_name(char *old_path, char *new_name)
+// {
+//     printf("FUNCTION change_root_name ARGS old_path: %s, new_name: %s\n", old_path, new_name);
 
-    char *temp_src_filename_01, *temp_src_filename_02;
-    temp_src_filename_01 = strdup(old_path);
-    temp_src_filename_02 = strdup(old_path);
+//     char *temp_src_filename_01, *temp_src_filename_02;
+//     temp_src_filename_01 = strdup(old_path);
+//     temp_src_filename_02 = strdup(old_path);
 
-    char *filename = basename(temp_src_filename_01);
-    char *dir = dirname(temp_src_filename_02);
+//     char *filename = basename(temp_src_filename_01);
+//     char *dir = dirname(temp_src_filename_02);
 
-    char *new_filename;
+//     char *new_filename;
 
-    char dot = '.', slash = '/';
+//     char dot = '.', slash = '/';
 
-    if (dir[0] == dot || strchr(dir, slash) == NULL)
-    {
-        size_t filename_len = strlen(filename);
-        new_filename = malloc(filename_len + strlen(new_name) + 2); // Add 2 for '/' and '\0'
-        new_filename[0] = '\0';
-        strcat(new_filename, new_name);
-        strcat(new_filename, "/");
-        strcat(new_filename, filename);
-    }
-    else
-    {
-        char *ptr = strchr(dir, slash);
-        ptr++;
-        size_t filename_len = strlen(filename);
-        size_t ptr_len = strlen(ptr);
-        new_filename = malloc(filename_len + ptr_len + strlen(new_name) + 3); // Add 3 for '/', '\0', and additional safety
-        new_filename[0] = '\0';
-        strcat(new_filename, new_name);
-        strcat(new_filename, "/");
-        strcat(new_filename, ptr);
-        strcat(new_filename, "/");
-        strcat(new_filename, filename);
-    }
+//     if (dir[0] == dot || strchr(dir, slash) == NULL)
+//     {
+//         size_t filename_len = strlen(filename);
+//         new_filename = malloc(filename_len + strlen(new_name) + 2); // Add 2 for '/' and '\0'
+//         new_filename[0] = '\0';
+//         strcat(new_filename, new_name);
+//         strcat(new_filename, "/");
+//         strcat(new_filename, filename);
+//     }
+//     else
+//     {
+//         char *ptr = strchr(dir, slash);
+//         ptr++;
+//         size_t filename_len = strlen(filename);
+//         size_t ptr_len = strlen(ptr);
+//         new_filename = malloc(filename_len + ptr_len + strlen(new_name) + 3); // Add 3 for '/', '\0', and additional safety
+//         new_filename[0] = '\0';
+//         strcat(new_filename, new_name);
+//         strcat(new_filename, "/");
+//         strcat(new_filename, ptr);
+//         strcat(new_filename, "/");
+//         strcat(new_filename, filename);
+//     }
 
-    free(temp_src_filename_01);
-    free(temp_src_filename_02);
-    temp_src_filename_01 = NULL, temp_src_filename_02 = NULL;
+//     free(temp_src_filename_01);
+//     free(temp_src_filename_02);
+//     temp_src_filename_01 = NULL, temp_src_filename_02 = NULL;
 
-    return new_filename;
-}
+//     return new_filename;
+// }
 
 // Copy the contents of a source directory to a destination directory.
-void copy_directory(char *dir_name, char *current_path, char *dest_dir, int msqid, int *available_processes)
+void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_pool_control *processes_control)
 {
-    printf("FUNCTION copy_directory ARGS dir_name: %s, current_path: %s, dest_dir: %s, msqid: %d, available_processes: %d\n", dir_name, current_path, dest_dir, msqid, (*available_processes));
+    printf("FUNCTION copy_directory ARGS src_dir: %s, dest_dir: %s, msqid: %d", src_dir, dest_dir, msqid);
 
-    DIR *dirp = opendir(dir_name);
+    DIR *dirp = opendir(src_dir);
     if (dirp == NULL)
     {
         perror("opendir");
         exit(-1);
     }
 
-    if (chdir(dir_name) != 0) // Change process cwd
+    if (chdir(src_dir) != 0) // Change process cwd
     {
         perror("chdir");
         exit(-1);
@@ -164,19 +164,20 @@ void copy_directory(char *dir_name, char *current_path, char *dest_dir, int msqi
             for (int i = 0; i < queue_len; i++)
             {
                 struct msgbuf temp;
-                bool result = receive_msg(msqid, &temp, DONE, true);
+                bool result = receive_msg(msqid, &temp, getpid(), DONE, true);
                 if (result)
                 {
-                    (*available_processes)++;
+                    set_process_state((*processes_control).pids, temp.sender_pid, 1);
+                    (*processes_control).available_processes++;
                 }
             }
         }
 
-        while ((*available_processes) == 0) // Wait for a process to be available to continue
+        while ((*processes_control).available_processes == 0) // Wait for a process to be available to continue
         {
             struct msgbuf temp;
-            receive_msg(msqid, &temp, DONE, false);
-            (*available_processes)++;
+            receive_msg(msqid, &temp, getpid(), DONE, false);
+            (*processes_control).available_processes++;
         }
 
         if (stat(entry->d_name, &sb) != 0)
@@ -192,13 +193,19 @@ void copy_directory(char *dir_name, char *current_path, char *dest_dir, int msqi
 
         if (S_ISDIR(sb.st_mode) != 0) // Is a directory
         {
-            char path[MAX_MSG_LEN];
-            snprintf(path, sizeof(path), "%s/%s", current_path, entry->d_name);
+            char new_src_dir[MAX_MSG_LEN], new_dest_dir[MAX_MSG_LEN];
+            snprintf(new_src_dir, sizeof(new_src_dir), "%s/%s", src_dir, entry->d_name);
+            snprintf(new_dest_dir, sizeof(new_dest_dir), "%s/%s", src_dir, entry->d_name);
 
-            send_msg(msqid, CREATE_DIR, path, false);
-            (*available_processes)--;
+            int pid = get_free_process_pid((*processes_control).pids);
 
-            copy_directory(entry->d_name, path, dest_dir, msqid, available_processes);
+            send_msg(msqid, pid, CHANGE_DIR, getpid(), dest_dir, false);
+            send_msg(msqid, pid, CREATE_DIR, getpid(), new_dest_dir, false);
+
+            set_process_state((*processes_control).pids, pid, 0);
+            (*processes_control).available_processes--;
+
+            copy_directory(new_src_dir, new_dest_dir, msqid, processes_control);
 
             if (chdir("..") != 0) // Return process to previous path
             {
@@ -209,11 +216,16 @@ void copy_directory(char *dir_name, char *current_path, char *dest_dir, int msqi
         else // Is a file
         {
             char filepath[MAX_MSG_LEN];
-            snprintf(filepath, sizeof(filepath), "%s/%s", current_path, entry->d_name);
+            snprintf(filepath, sizeof(filepath), "%s/%s", src_dir, entry->d_name);
             // printf("Filepath: %s\n", filepath);
 
-            send_msg(msqid, COPY_FILE, filepath, false);
-            (*available_processes)--;
+            int pid = get_free_process_pid((*processes_control).pids);
+
+            send_msg(msqid, pid, CHANGE_DIR, getpid(), dest_dir, false);
+            send_msg(msqid, pid, COPY_FILE, getpid(), filepath, false);
+
+            set_process_state((*processes_control).pids, pid, 0);
+            (*processes_control).available_processes--;
         }
     }
     closedir(dirp);

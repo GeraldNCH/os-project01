@@ -56,10 +56,12 @@ void delete_msg_queue(int msqid)
 }
 
 // Sends a message in the specified queue.
-void send_msg(int msqid, long type, char *msg, bool flag)
+void send_msg(int msqid, int type, int action, int sender_pid, char *msg, bool flag)
 {
     struct msgbuf temp;
     temp.mtype = type;
+    temp.action = action;
+    temp.sender_pid = sender_pid;
     strcpy(temp.mtext, msg);
 
     if (flag)
@@ -80,7 +82,7 @@ void send_msg(int msqid, long type, char *msg, bool flag)
 
 // Receive a message from a message queue.
 // The return value indicates if a message was received.
-bool receive_msg(int msqid, struct msgbuf *temp, long type, bool flag)
+bool receive_msg(int msqid, struct msgbuf *temp, int type, int action, bool flag)
 {
     if (flag)
     {
@@ -106,7 +108,7 @@ int len_msg_queue(int msqid)
 }
 
 // Get last message sender pid.
-pid_t get_last_sender(int msqid)
+int get_last_sender(int msqid)
 {
     struct msqid_ds buf;
     if (msgctl(msqid, IPC_STAT, &buf) != 0)
