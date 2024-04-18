@@ -13,4 +13,4 @@ Llame al ejecutable `main.out` que se encuentra en la carpeta `bin`. Este ejecut
 2. Directorio destino. Es necesario que este directorio exista.
 3. Nombre del archivo de logs.
 
-Ejemplo: `./main.out test copy-test log-file-01`
+Ejemplo: `./main.out test copy-test log-file-01.csv`
