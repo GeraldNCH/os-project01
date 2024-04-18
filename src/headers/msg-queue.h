@@ -6,13 +6,12 @@
 #define MAX_MSG_LEN 4095
 
 #define CHANGE_DIR 1
-#define CREATE_DIR 2
-#define COPY_FILE 3
-#define DONE 4
+#define COPY_FILE 2
+#define DONE 3
 
 struct msgbuf
 {
-    int mtype;
+    long mtype;
     int action;
     int sender_pid;
     char mtext[MAX_MSG_LEN];
@@ -26,7 +25,7 @@ void delete_msg_queue(int msqid);
 
 void send_msg(int msqid, int type, int action, int sender_pid, char *msg, bool flag);
 
-bool receive_msg(int msqid, struct msgbuf *temp, int type, int action, bool flag);
+bool receive_msg(int msqid, struct msgbuf *temp, int type, bool flag);
 
 int len_msg_queue(int msqid);
 
