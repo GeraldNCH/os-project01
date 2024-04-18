@@ -69,17 +69,14 @@ int main(int argc, char **argv)
     processes_control.available_processes = PROCESS_POOL_SIZE;
     int is_parent = create_process_pool(processes_control.pids);
 
-    printf("pid: %d, state: %d\n", processes_control.pids[0][0], processes_control.pids[0][1]);
-
     if (is_parent)
     {
-        printf("parent entered\n");
         copy_directory(src_path, dest_path, msqid, &processes_control);
 
         while (!is_msg_queue_empty(msqid) || processes_control.available_processes != PROCESS_POOL_SIZE)
         {
             struct msgbuf temp;
-            receive_msg(msqid, &temp, getpid(), DONE, false);
+            receive_msg(msqid, &temp, getpid(), false);
             processes_control.available_processes++;
         }
 
@@ -88,45 +85,26 @@ int main(int argc, char **argv)
     }
     else
     {
-
         while (true)
         {
-            printf("child entered\n");
             struct msgbuf temp;
-            receive_msg(msqid, &temp, getpid(), -COPY_FILE, false);
 
-            if (temp.action == CHANGE_DIR)
+            // Change directory block
+            receive_msg(msqid, &temp, getpid(), false);
+            if (chdir(temp.mtext) != 0)
             {
-                int result;
-                do
-                {
-                    result = chdir(temp.mtext);
-                } while (result != 0);
+                perror("chdir");
+                exit(-1);
             }
-            else if (temp.action == CREATE_DIR)
-            {
-                char *temp_path = strdup(temp.mtext);
-                char *dir_name = basename(temp_path);
+            send_msg(msqid, parent_pid, DONE, getpid(), "Directory changed", false);
 
-                create_dir(dir_name);
-
-                send_msg(msqid, parent_pid, DONE, getpid(), dir_name, false);
-                free(temp_path);
-            }
-            else
-            {
-                char *temp_path = strdup(temp.mtext);
-                char *filename = basename(temp_path);
-
-                bool result;
-                do
-                {
-                    result = copy_file(temp.mtext, filename);
-                } while (!result);
-
-                send_msg(msqid, parent_pid, DONE, getpid(), filename, false);
-                free(temp_path);
-            }
+            // Copy file block
+            receive_msg(msqid, &temp, getpid(), false);
+            char *temp_path = strdup(temp.mtext);
+            char *filename = basename(temp_path);
+            copy_file(temp.mtext, filename);
+            send_msg(msqid, parent_pid, DONE, getpid(), filename, false);
+            free(temp_path);
         }
     }
 
