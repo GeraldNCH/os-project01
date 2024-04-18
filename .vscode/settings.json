@@ -2,6 +2,7 @@
     "files.associations": {
         "string.h": "c",
         "stdbool.h": "c",
-        "msg.h": "c"
+        "msg.h": "c",
+        "cmath": "c"
     }
 }
