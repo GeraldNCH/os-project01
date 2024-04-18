@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <libgen.h>
 #include <string.h>
-#include <time.h>
+#include <sys/time.h>
 
 #include "../headers/archives.h"
 #include "../headers/msg-queue.h"
@@ -14,13 +14,14 @@ int main(int argc, char **argv)
 {
     int parent_pid = getpid();
 
-    if (argc != 3)
+    if (argc != 4)
     {
-        printf("You must pass 3 arguments to the program\n");
+        printf("You must pass 4 arguments to the program\n");
         exit(-1);
     }
     char *src_dir = argv[1];
     char *dest_dir = argv[2];
+    char *log_file_name = argv[3];
 
     // printf("src dir: %s, dest dir: %s\n", src_dir, dest_dir);
 
@@ -60,7 +61,7 @@ int main(int argc, char **argv)
 
     // Initialize log file
     char log_file_path[MAX_MSG_LEN];
-    snprintf(log_file_path, sizeof(log_file_path), "%s/%s", original_path, "log-file.csv");
+    snprintf(log_file_path, sizeof(log_file_path) + 13, "%s/%s", original_path, log_file_name);
     create_log_file(log_file_path);
 
     int msqid = create_msg_queue();
@@ -71,13 +72,14 @@ int main(int argc, char **argv)
 
     if (is_parent)
     {
-        copy_directory(src_path, dest_path, msqid, &processes_control);
+        copy_directory(src_path, dest_path, msqid, &processes_control, log_file_path);
 
         while (!is_msg_queue_empty(msqid) || processes_control.available_processes != PROCESS_POOL_SIZE)
         {
             struct msgbuf temp;
-            receive_msg(msqid, &temp, getpid(), false);
+            receive_msg(msqid, &temp, FILE_COPIED, false);
             processes_control.available_processes++;
+            add_entry_log_file(log_file_path, temp.mtext, temp.sender_pid, temp.copy_duration);
         }
 
         delete_process_pool(processes_control.pids);
@@ -87,29 +89,30 @@ int main(int argc, char **argv)
     {
         while (true)
         {
-            struct msgbuf temp;
-
             // Change directory block
-            receive_msg(msqid, &temp, getpid(), false);
-            if (chdir(temp.mtext) != 0)
+            struct msgbuf temp_01;
+            receive_msg(msqid, &temp_01, getpid(), false);
+            if (chdir(temp_01.mtext) != 0)
             {
                 perror("chdir");
                 exit(-1);
             }
-            send_msg(msqid, parent_pid, "Directory changed", DONE, getpid(), 0, false);
+            send_msg(msqid, DIR_CHANGED, "Directory changed", DIR_CHANGED, getpid(), 0, false);
 
             // Copy file block
-            receive_msg(msqid, &temp, getpid(), false);
-            char *temp_path = strdup(temp.mtext);
+            struct msgbuf temp_02;
+            receive_msg(msqid, &temp_02, getpid(), false);
+            struct timeval start_time, end_time;
+            gettimeofday(&start_time, NULL);
+            char *temp_path = strdup(temp_02.mtext);
             char *filename = basename(temp_path);
-            clock_t start_time = clock();
-            copy_file(temp.mtext, filename);
-            clock_t end_time = clock();
-            double duration = ((double)(end_time - start_time)) / CLOCKS_PER_SEC * 1000;
-            send_msg(msqid, parent_pid, filename, DONE, getpid(), duration, false);
+            copy_file(temp_02.mtext, filename);
+            gettimeofday(&end_time, NULL);
+            double duration = (end_time.tv_sec - start_time.tv_sec) * 1000.0;
+            duration += (end_time.tv_usec - start_time.tv_usec) / 1000.0;
+            send_msg(msqid, FILE_COPIED, filename, FILE_COPIED, getpid(), duration, false);
             free(temp_path);
         }
     }
-
     exit(0);
 }
