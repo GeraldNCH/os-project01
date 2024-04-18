@@ -195,7 +195,7 @@ void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_poo
 
             create_dir(new_dest_dir);
 
-            copy_directory(new_src_dir, new_dest_dir, msqid, processes_control);
+            copy_directory(new_src_dir, new_dest_dir, msqid, processes_control, log_file_path);
 
             if (chdir("..") != 0) // Return process to previous path
             {
