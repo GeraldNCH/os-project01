@@ -44,8 +44,6 @@ bool compare_directory(char *path)
 // Copies a file in the specified path.
 bool copy_file(char *src_filepath, char *dest_filepath)
 {
-    clock_t start_time = clock();
-
     FILE *src_file = fopen(src_filepath, "rb");
     if (src_file == NULL)
     {
@@ -78,11 +76,6 @@ bool copy_file(char *src_filepath, char *dest_filepath)
 
     fclose(src_file);
     fclose(dest_file);
-
-    // Register in log file
-    clock_t end_time = clock();
-    double duration = ((double)(end_time - start_time)) / CLOCKS_PER_SEC * 1000;
-    register_copy_CSV(dest_filepath, getpid(), duration);
 
     return true;
 }
@@ -215,11 +208,11 @@ void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_poo
 
             int pid = get_free_process_pid(processes_control->pids);
 
-            send_msg(msqid, pid, CHANGE_DIR, getpid(), dest_dir, false);
+            send_msg(msqid, pid, dest_dir, CHANGE_DIR, getpid(), 0, false);
             struct msgbuf temp;
             receive_msg(msqid, &temp, getpid(), false);
 
-            send_msg(msqid, pid, COPY_FILE, getpid(), filepath, false);
+            send_msg(msqid, pid, filepath, COPY_FILE, getpid(), 0, false);
 
             set_process_state(processes_control->pids, pid, 0);
             processes_control->available_processes--;
