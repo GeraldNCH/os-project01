@@ -8,9 +8,13 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/msg.h>
+#include <time.h>
 
 #include "../headers/archives.h"
 #include "../headers/msg-queue.h"
+#include "../headers/logs.h"
+
+#define BUFFER_SIZE 4096
 
 // Create a directory if not exists.
 void create_dir(char *path)
@@ -30,37 +34,45 @@ void create_dir(char *path)
 // Copies a file in the specified path.
 bool copy_file(char *src_filepath, char *dest_filepath)
 {
-    printf("FUNCTION copy_file ARGS src_filepath: %s, dest_filepath:%s\n", src_filepath, dest_filepath);
+    clock_t start_time = clock();
 
-    FILE *file = fopen(src_filepath, "rb");
-    if (file == NULL)
+    FILE *src_file = fopen(src_filepath, "rb");
+    if (src_file == NULL)
     {
         perror("fopen src file");
         return false;
     }
 
-    FILE *new_file = fopen(dest_filepath, "wb");
-    if (new_file == NULL)
+    FILE *dest_file = fopen(dest_filepath, "wb");
+    if (dest_file == NULL)
     {
         perror("fopen dest file");
+        fclose(src_file);
         return false;
     }
 
-    // Get file size
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-    rewind(file);
+    // Buffer for copying data
+    char buffer[BUFFER_SIZE];
+    size_t bytes_read;
 
-    char *content = malloc(file_size);
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), src_file)) > 0)
+    {
+        if (fwrite(buffer, 1, bytes_read, dest_file) != bytes_read)
+        {
+            perror("fwrite");
+            fclose(src_file);
+            fclose(dest_file);
+            return false;
+        }
+    }
 
-    fread(content, file_size, 1, file);
-    fwrite(content, file_size, 1, new_file);
+    fclose(src_file);
+    fclose(dest_file);
 
-    fclose(file);
-    fclose(new_file);
-
-    free(content);
-    content = NULL;
+    // Register in log file 
+    clock_t end_time = clock();
+    double duration = ((double)(end_time - start_time)) / CLOCKS_PER_SEC * 1000; 
+    register_copy_CSV(dest_filepath, getpid(), duration);
 
     return true;
 }
@@ -78,15 +90,14 @@ char *change_root_name(char *old_path, char *new_name)
     char *filename = basename(temp_src_filename_01);
     char *dir = dirname(temp_src_filename_02);
 
-    // printf("filename: %s, dirname: %s\n", filename, dir);
-
     char *new_filename;
 
     char dot = '.', slash = '/';
 
     if (dir[0] == dot || strchr(dir, slash) == NULL)
     {
-        new_filename = malloc(sizeof(filename) + sizeof(new_name) + 2);
+        size_t filename_len = strlen(filename);
+        new_filename = malloc(filename_len + strlen(new_name) + 2); // Add 2 for '/' and '\0'
         new_filename[0] = '\0';
         strcat(new_filename, new_name);
         strcat(new_filename, "/");
@@ -96,7 +107,9 @@ char *change_root_name(char *old_path, char *new_name)
     {
         char *ptr = strchr(dir, slash);
         ptr++;
-        new_filename = malloc(sizeof(filename) + sizeof(ptr) + sizeof(new_name) + 3);
+        size_t filename_len = strlen(filename);
+        size_t ptr_len = strlen(ptr);
+        new_filename = malloc(filename_len + ptr_len + strlen(new_name) + 3); // Add 3 for '/', '\0', and additional safety
         new_filename[0] = '\0';
         strcat(new_filename, new_name);
         strcat(new_filename, "/");
@@ -104,8 +117,6 @@ char *change_root_name(char *old_path, char *new_name)
         strcat(new_filename, "/");
         strcat(new_filename, filename);
     }
-
-    // printf("New filename: %s\n", new_filename);
 
     free(temp_src_filename_01);
     free(temp_src_filename_02);
