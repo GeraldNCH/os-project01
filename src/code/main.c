@@ -8,9 +8,11 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <signal.h>
+#include <time.h>
 
 #include "../headers/archives.h"
 #include "../headers/msg-queue.h"
+#include "../headers/logs.h"
 
 #define PROCESS_POOL_SIZE 2
 
@@ -47,6 +49,8 @@ void delete_process_pool(pid_t pids[PROCESS_POOL_SIZE])
 
 int main(int argc, char **argv)
 {
+    create_log_file(); 
+
     if (argc != 3)
     {
         printf("You must pass 3 arguments to the program\n");
