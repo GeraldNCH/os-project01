@@ -93,29 +93,28 @@ void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_poo
 
     while ((entry = readdir(dirp)) != NULL)
     {
-        if (get_last_sender(msqid) != getpid())
+        if (processes_control->available_processes == 0)
+        {
+            struct msgbuf temp;
+            receive_msg(msqid, &temp, FILE_COPIED, false);
+            set_process_state(processes_control->pids, temp.sender_pid, 1);
+            processes_control->available_processes++;
+            add_entry_log_file(log_file_path, temp.mtext, temp.sender_pid, temp.copy_duration);
+        }
+        else if (get_last_sender(msqid) != getpid())
         {
             int queue_len = len_msg_queue(msqid);
             for (int i = 0; i < queue_len; i++)
             {
                 struct msgbuf temp;
-                bool result = receive_msg(msqid, &temp, getpid(), true);
+                bool result = receive_msg(msqid, &temp, FILE_COPIED, true);
                 if (result)
                 {
-                    add_entry_log_file(log_file_path, temp.mtext, temp.sender_pid, temp.copy_duration);
                     set_process_state(processes_control->pids, temp.sender_pid, 1);
                     processes_control->available_processes++;
+                    add_entry_log_file(log_file_path, temp.mtext, temp.sender_pid, temp.copy_duration);
                 }
             }
-        }
-
-        while (processes_control->available_processes == 0) // Wait for a process to be available to continue
-        {
-            struct msgbuf temp;
-            receive_msg(msqid, &temp, getpid(), false);
-            add_entry_log_file(log_file_path, temp.mtext, temp.sender_pid, temp.copy_duration);
-            set_process_state(processes_control->pids, temp.sender_pid, 1);
-            processes_control->available_processes++;
         }
 
         if (stat(entry->d_name, &sb) != 0)
@@ -153,8 +152,9 @@ void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_poo
             int pid = get_free_process_pid(processes_control->pids);
 
             send_msg(msqid, pid, dest_dir, CHANGE_DIR, getpid(), 0, false);
+
             struct msgbuf temp;
-            receive_msg(msqid, &temp, getpid(), false);
+            receive_msg(msqid, &temp, DIR_CHANGED, false);
 
             send_msg(msqid, pid, filepath, COPY_FILE, getpid(), 0, false);
 
