@@ -96,14 +96,17 @@ int main(int argc, char **argv)
                 perror("chdir");
                 exit(-1);
             }
-            send_msg(msqid, parent_pid, DONE, getpid(), "Directory changed", false);
+            send_msg(msqid, parent_pid, "Directory changed", DONE, getpid(), 0, false);
 
             // Copy file block
             receive_msg(msqid, &temp, getpid(), false);
             char *temp_path = strdup(temp.mtext);
             char *filename = basename(temp_path);
+            clock_t start_time = clock();
             copy_file(temp.mtext, filename);
-            send_msg(msqid, parent_pid, DONE, getpid(), filename, false);
+            clock_t end_time = clock();
+            double duration = ((double)(end_time - start_time)) / CLOCKS_PER_SEC * 1000;
+            send_msg(msqid, parent_pid, filename, DONE, getpid(), duration, false);
             free(temp_path);
         }
     }
