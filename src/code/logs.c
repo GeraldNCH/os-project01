@@ -34,7 +34,7 @@ void add_entry_log_file(const char *filepath, char *filename, int pid, double du
         exit(-1);
     }
 
-    fprintf(file, "%s,%d,%f\n", filename, pid, duration);
+    fprintf(file, "%s,%d,%lf\n", filename, pid, duration);
 
     fclose(file);
 }
