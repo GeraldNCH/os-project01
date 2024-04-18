@@ -3,12 +3,14 @@
 
 #include <stdbool.h>
 
-#define MAX_MSG_LEN 4095
+#define MAX_MSG_LEN 4096
 
 #define CHANGE_DIR 1
 #define COPY_FILE 2
-#define DONE 3
+#define DIR_CHANGED 3
+#define FILE_COPIED 4
 
+// Message buffer to use in message queue
 struct msgbuf
 {
     long mtype;
