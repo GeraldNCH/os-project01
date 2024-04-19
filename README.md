@@ -12,23 +12,35 @@ Gerald Núñez Chavarría - 2021023226, Sebastián Arroniz Rojas -  2021108521
 
 **Fecha:** 18/04/2024
 
-- [Introducción](#introducción)
-- [Descripción del Problema](#descripción-del-problema)
-  - [Enunciado](#enunciado)
-- [Definición de Estructuras de Datos](#definición-de-estructuras-de-datos)
-- [Componentes Principales del Programa](#componentes-principales-del-programa)
-  - [Componente de Archivos](#componente-de-archivos)
-  - [Componente de Procesos](#componente-de-procesos)
-  - [Componente de Registros](#componente-de-registros)
-  - [Componente de la Cola de Mensajes](#componente-de-la-cola-de-mensajes)
-- [Mecanismo de Creación y Comunicación de Procesos](#mecanismo-de-creación-y-comunicación-de-procesos)
-- [Instrucciones de Uso](#instrucciones-de-uso)
-  - [Compilación](#compilación)
-  - [Ejecución](#ejecución)
-- [Pruebas de Rendimiento](#pruebas-de-rendimiento)
-  - [Análisis Grafico de las Pruebas](#análisis-gráfico-de-las-pruebas)
-  - [Conclusión de las Pruebas](#conclusión-de-las-pruebas)
-- [Conclusiones](#conclusiones)
+- [Process Pool Copy Program](#process-pool-copy-program)
+  - [Introducción](#introducción)
+  - [Descripción del Problema](#descripción-del-problema)
+    - [Enunciado](#enunciado)
+      - [Uso del Programa](#uso-del-programa)
+      - [Lectura de Directorios](#lectura-de-directorios)
+      - [Manejo de Múltiples Procesos](#manejo-de-múltiples-procesos)
+      - [Comunicación Entre Procesos](#comunicación-entre-procesos)
+      - [Análisis de Resultados](#análisis-de-resultados)
+  - [Definición de Estructuras de Datos](#definición-de-estructuras-de-datos)
+  - [Componentes Principales del Programa](#componentes-principales-del-programa)
+    - [Componente de Archivos](#componente-de-archivos)
+    - [Componente de Procesos](#componente-de-procesos)
+    - [Componente de Registros](#componente-de-registros)
+    - [Componente de la Cola de Mensajes](#componente-de-la-cola-de-mensajes)
+  - [Mecanismo de Creación y Comunicación de Procesos](#mecanismo-de-creación-y-comunicación-de-procesos)
+  - [Instrucciones de Uso](#instrucciones-de-uso)
+    - [Compilación](#compilación)
+    - [Ejecución](#ejecución)
+  - [Pruebas de Rendimiento](#pruebas-de-rendimiento)
+    - [Prueba 1](#prueba-1)
+    - [Prueba 2](#prueba-2)
+    - [Prueba 3](#prueba-3)
+    - [Prueba 4](#prueba-4)
+    - [Prueba 5](#prueba-5)
+    - [Prueba 6](#prueba-6)
+    - [Análisis Gráfico de las Pruebas](#análisis-gráfico-de-las-pruebas)
+    - [Conclusión de las Pruebas](#conclusión-de-las-pruebas)
+  - [Conclusiones](#conclusiones)
 
 ## Introducción
 
@@ -192,7 +204,7 @@ Para modificar la cantidad de procesos en el pool, simplemente se debe ajustar l
 
 Se utilizan un total de 2 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-01.csv`. Los registros en el archivo de logs proporcionan:
 
-[Insertar Imagen 1 aquí]
+![Prueba 1](docs/imgs/logfile-01.png)
 
 Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 151.205 milisegundos de duración.
 
@@ -200,7 +212,7 @@ Al sumar los valores de "duration", que representan la duración en milisegundos
 
 Se utilizan un total de 4 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-02.csv`. Los registros en el archivo de logs proporcionan:
 
-[Insertar Imagen 2 aquí]
+![Prueba 2](docs/imgs/logfile-02.png)
 
 Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 86.511 milisegundos de duración.
 
@@ -208,7 +220,7 @@ Al sumar los valores de "duration", que representan la duración en milisegundos
 
 Se utilizan un total de 9 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-03.csv`. Los registros en el archivo de logs proporcionan:
 
-[Insertar Imagen 3 aquí]
+![Prueba 3](docs/imgs/logfile-03.png)
 
 Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 95.939 milisegundos de duración.
 
@@ -216,7 +228,7 @@ Al sumar los valores de "duration", que representan la duración en milisegundos
 
 Se utilizan un total de 10 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-04.csv`. Los registros en el archivo de logs proporcionan:
 
-[Insertar Imagen 4 aquí]
+![Prueba 4](docs/imgs/logfile-04.png)
 
 Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 75.966 milisegundos de duración.
 
@@ -224,7 +236,7 @@ Al sumar los valores de "duration", que representan la duración en milisegundos
 
 Se utilizan un total de 16 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-05.csv`. Los registros en el archivo de logs proporcionan:
 
-[Insertar Imagen 5 aquí]
+![Prueba 5](docs/imgs/logfile-05.png)
 
 Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 83.686 milisegundos de duración.
 
@@ -232,7 +244,7 @@ Al sumar los valores de "duration", que representan la duración en milisegundos
 
 Se utilizan un total de 20 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-06.csv`. Los registros en el archivo de logs proporcionan:
 
-[Insertar Imagen 6 aquí]
+![Prueba 6](docs/imgs/logfile-06.png)
 
 Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 81.065 milisegundos de duración.
 
@@ -240,7 +252,7 @@ Al sumar los valores de "duration", que representan la duración en milisegundos
 
 Con el fin de visualizar mejor las pruebas, se realizó el siguiente gráfico que representa la relación entre la duración total de realizar la copia de archivos con el número de procesos que se utilizó:
 
-Imagen Gráfica
+![Gráfica](docs/imgs/grafica.png)
 
 ### Conclusión de las Pruebas
 
