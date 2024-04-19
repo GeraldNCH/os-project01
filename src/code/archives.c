@@ -19,7 +19,7 @@
 // Create a directory if not exists.
 void create_dir(char *path)
 {
-    printf("FUNCTION create_dir\n");
+    // printf("FUNCTION create_dir\n");
 
     struct stat sb;
     if (stat(path, &sb) == -1)
@@ -64,6 +64,12 @@ bool copy_file(char *src_filepath, char *dest_filepath)
         }
     }
 
+    // Get file size and print its name and size
+    rewind(src_file);
+    fseek(src_file, 0L, SEEK_END);
+    long file_size = ftell(src_file);
+    printf("File copied: %s, Size in bytes: %ld\n", dest_filepath, file_size);
+
     fclose(src_file);
     fclose(dest_file);
 
@@ -73,7 +79,7 @@ bool copy_file(char *src_filepath, char *dest_filepath)
 // Copy the contents of a source directory to a destination directory.
 void copy_directory(char *src_dir, char *dest_dir, int msqid, struct process_pool_control *processes_control, char *log_file_path)
 {
-    printf("FUNCTION copy_directory ARGS src_dir: %s, dest_dir: %s, msqid: %d, processes_control.available_processes: %d\n", src_dir, dest_dir, msqid, processes_control->available_processes);
+    // printf("FUNCTION copy_directory ARGS src_dir: %s, dest_dir: %s, msqid: %d, processes_control.available_processes: %d\n", src_dir, dest_dir, msqid, processes_control->available_processes);
 
     DIR *dirp = opendir(src_dir);
     if (dirp == NULL)
