@@ -58,7 +58,7 @@ void delete_msg_queue(int msqid)
 // Sends a message in the specified queue.
 void send_msg(int msqid, int type, char *msg, int action, int sender_pid, double copy_duration, bool flag)
 {
-    printf("FUNCTION send_msg ARGS msqid: %d, type: %d, msg: %s, action: %d, sender_pid: %d, copy_duration: %lf, flag: %d\n", msqid, type, msg, action, sender_pid, copy_duration, flag);
+    // printf("FUNCTION send_msg ARGS msqid: %d, type: %d, msg: %s, action: %d, sender_pid: %d, copy_duration: %lf, flag: %d\n", msqid, type, msg, action, sender_pid, copy_duration, flag);
     struct msgbuf temp;
     temp.mtype = type;
     strcpy(temp.mtext, msg);
@@ -86,7 +86,7 @@ void send_msg(int msqid, int type, char *msg, int action, int sender_pid, double
 // The return value indicates if a message was received.
 bool receive_msg(int msqid, struct msgbuf *temp, int type, bool flag)
 {
-    printf("FUNCTION receive_msg ARGS msqid: %d, type: %d, flag: %d\n", msqid, type, flag);
+    // printf("FUNCTION receive_msg ARGS msqid: %d, type: %d, flag: %d\n", msqid, type, flag);
     if (flag)
     {
         return (msgrcv(msqid, temp, sizeof(struct msgbuf) - sizeof(long), type, IPC_NOWAIT) == -1) ? false : true;
