@@ -57,7 +57,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    printf("ORIGINAL PATH: %s, SRC_PATH: %s, DEST_PATH: %s\n", original_path, src_path, dest_path);
+    // printf("ORIGINAL PATH: %s, SRC_PATH: %s, DEST_PATH: %s\n", original_path, src_path, dest_path);
 
     // Initialize log file
     char log_file_path[MAX_MSG_LEN];
