@@ -12,6 +12,24 @@ Gerald Núñez Chavarría - 2021023226, Sebastián Arroniz Rojas -  2021108521
 
 **Fecha:** 18/04/2024
 
+- [Introducción](#introducción)
+- [Descripción del Problema](#descripción-del-problema)
+  - [Enunciado](#enunciado)
+- [Definición de Estructuras de Datos](#definición-de-estructuras-de-datos)
+- [Componentes Principales del Programa](#componentes-principales-del-programa)
+  - [Componente de Archivos](#componente-de-archivos)
+  - [Componente de Procesos](#componente-de-procesos)
+  - [Componente de Registros](#componente-de-registros)
+  - [Componente de la Cola de Mensajes](#componente-de-la-cola-de-mensajes)
+- [Mecanismo de Creación y Comunicación de Procesos](#mecanismo-de-creación-y-comunicación-de-procesos)
+- [Instrucciones de Uso](#instrucciones-de-uso)
+  - [Compilación](#compilación)
+  - [Ejecución](#ejecución)
+- [Pruebas de Rendimiento](#pruebas-de-rendimiento)
+  - [Análisis Grafico de las Pruebas](#análisis-gráfico-de-las-pruebas)
+  - [Conclusión de las Pruebas](#conclusión-de-las-pruebas)
+- [Conclusiones](#conclusiones)
+
 ## Introducción
 
 El objetivo de este proyecto es comparar el rendimiento de realizar una tarea colaborativa utilizando múltiples procesos. Para ello se deberá desarrollar una versión multiprocesos del programa `copy` que permita copiar el contenido de un directorio completo.
@@ -61,33 +79,37 @@ Para el desarrollo del programa se necesitó definir dos estructuras de datos. L
 
 **Estructura para controlar el pool de procesos:**
 
-`struct process_pool_control`
+```c
+struct process_pool_control
 
-`{`
+{
 
-  `int pids[PROCESS_POOL_SIZE][2];`
+  int pids[PROCESS_POOL_SIZE][2];
 
-  `int available_processes;`
+  int available_processes;
 
-`};`
+};
+```
 
 **Estructura para el buffer de la cola de mensajes:**
 
-`struct msgbuf`
+```c
+struct msgbuf
 
-`{`
+{
 
-  `long mtype;`
+  long mtype;
 
-  `char mtext[MAX_MSG_LEN];`
+  char mtext[MAX_MSG_LEN];
 
-  `int action;`
+  int action;
 
-  `int sender_pid;`
+  int sender_pid;
 
-  `double copy_duration;`
+  double copy_duration;
 
-`};`
+};
+```
 
 ## Componentes Principales del Programa
 
@@ -157,3 +179,79 @@ Llame al ejecutable `main.out` que se encuentra en la carpeta `bin`. Este ejecut
 3. Nombre del archivo de logs.
 
 Ejemplo: `./main.out test copy-test log-file-01.csv`
+
+## Pruebas de Rendimiento
+
+Se llevarán a cabo pruebas de rendimiento del programa, variando el tamaño del pool de procesos, con el objetivo de determinar la configuración más eficiente. Para ello, se realizará la copia de un directorio llamado "test", que contiene varios directorios y archivos, al directorio de destino denominado "copy-test".
+
+La métrica de rendimiento seleccionada consiste en el tiempo total requerido para copiar todos los archivos. Esta métrica se obtiene mediante la suma de todos los tiempos registrados en el archivo de logs, el cual incluye el nombre del archivo copiado, el PID del proceso que lo copió y su duración en milisegundos. Las pruebas se realizarán utilizando 2, 4, 9, 10, 16 y 20 procesos hijos.
+
+Para modificar la cantidad de procesos en el pool, simplemente se debe ajustar la macro `#define PROCESS_POOL_SIZE 2`, donde el número al final representa la cantidad de procesos en el pool.
+
+### Prueba 1
+
+Se utilizan un total de 2 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-01.csv`. Los registros en el archivo de logs proporcionan:
+
+[Insertar Imagen 1 aquí]
+
+Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 151.205 milisegundos de duración.
+
+### Prueba 2
+
+Se utilizan un total de 4 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-02.csv`. Los registros en el archivo de logs proporcionan:
+
+[Insertar Imagen 2 aquí]
+
+Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 86.511 milisegundos de duración.
+
+### Prueba 3
+
+Se utilizan un total de 9 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-03.csv`. Los registros en el archivo de logs proporcionan:
+
+[Insertar Imagen 3 aquí]
+
+Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 95.939 milisegundos de duración.
+
+### Prueba 4
+
+Se utilizan un total de 10 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-04.csv`. Los registros en el archivo de logs proporcionan:
+
+[Insertar Imagen 4 aquí]
+
+Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 75.966 milisegundos de duración.
+
+### Prueba 5
+
+Se utilizan un total de 16 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-05.csv`. Los registros en el archivo de logs proporcionan:
+
+[Insertar Imagen 5 aquí]
+
+Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 83.686 milisegundos de duración.
+
+### Prueba 6
+
+Se utilizan un total de 20 procesos. El comando utilizado es: `./bin/main.out test copy-test logfile-06.csv`. Los registros en el archivo de logs proporcionan:
+
+[Insertar Imagen 6 aquí]
+
+Al sumar los valores de "duration", que representan la duración en milisegundos de cada proceso para copiar el archivo, se obtiene un total de 81.065 milisegundos de duración.
+
+### Análisis Gráfico de las Pruebas
+
+Con el fin de visualizar mejor las pruebas, se realizó el siguiente gráfico que representa la relación entre la duración total de realizar la copia de archivos con el número de procesos que se utilizó:
+
+Imagen Gráfica
+
+### Conclusión de las Pruebas
+
+El mejor resultado se obtiene en la prueba número 4 dónde se utilizaron 10 procesos y la duración fue de 75.966 milisegundos. El peor resultado se obtiene en la prueba número 1 dónde se utilizaron 2 procesos y la duración fue de 151.205 milisegundos. 
+
+Al utilizar únicamente dos procesos, la copia de archivos es más lenta. No obstante, después de cuatro procesos, aumentar el número no significa disminuir la duración. Se concluye que después de cuatro procesos hijos, se va a mantener una duración promedio de 60 a 100 milisegundos después de cuatro procesos al realizar el proceso de copia. 
+
+## Conclusiones
+
+1. Se implementó un programa en C que utiliza múltiples procesos para copiar archivos de un directorio a otro. Se creó un pool de procesos estático al inicio del programa para realizar las tareas de copia de archivos de manera concurrente.
+2. El programa consta de cinco componentes principales: archivos, procesos, registros, cola de mensajes y un mecanismo de creación y comunicación de procesos. Cada componente desempeña un papel crucial en la creación, gestión y ejecución eficiente de las tareas de copia de archivos.
+3. Se llevaron a cabo pruebas variando el tamaño del pool de procesos (2, 4, 9, 10, 16 y 20 procesos) y se registró el tiempo total requerido para copiar todos los archivos. Los resultados mostraron que el mejor rendimiento se logró con 10 procesos, con una duración de 75.966 milisegundos, mientras que el peor rendimiento se obtuvo con solo 2 procesos, con una duración de 151.205 milisegundos.
+4. Se realizó un análisis gráfico para visualizar la relación entre la duración total de la copia de archivos y el número de procesos utilizados. Se observó que después de cuatro procesos, aumentar el número no significaba una disminución significativa en la duración.
+5. Se concluyó que después de cuatro procesos hijos, la duración promedio de la copia de archivos se mantuvo en el rango de 60 a 100 milisegundos. A partir de esta cantidad de procesos, agregar más no proporcionaba una mejora sustancial en el rendimiento.
