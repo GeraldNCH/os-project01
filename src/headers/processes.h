@@ -1,7 +1,7 @@
 #ifndef PROCESSES
 #define PROCESSES
 
-#define PROCESS_POOL_SIZE 2
+#define PROCESS_POOL_SIZE 4
 
 // Struct to control the process pool.
 struct process_pool_control
